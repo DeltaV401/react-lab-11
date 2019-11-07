@@ -1,17 +1,26 @@
-export const DETAILS = 'details';
+export const TOGGLE_DETAILS = 'toggle details';
 
-export const initialState = {};
+export const initialState = {
+  details: {},
+  showDetails: false,
+};
 
 export function reducer(state = initialState, action = {}) {
   switch(action.type) {
     case TOGGLE_DETAILS: {
-      let item = state.todoList.find(item => item._id === action.payload);
         return {
-          details: item || {},
-          showDetails: !!item,
+          details: action.payload || {},
+          showDetails: !!action.payload,
         }
       }
     default:
       return state;
   }
+}
+
+export function toggleDetails(item) {
+  return {
+    type: TOGGLE_DETAILS,
+    payload: item,
+  };
 }

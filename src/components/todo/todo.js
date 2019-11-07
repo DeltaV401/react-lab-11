@@ -5,6 +5,7 @@ import Modal from '../modal';
 import { connect } from 'react-redux';
 
 import { addItem, deleteItem, toggleComplete} from '../../store/todolist-reducer';
+import { toggleDetails } from '../../store/item-reducer';
 
 import './todo.scss';
 
@@ -13,8 +14,6 @@ class ToDo extends React.Component {
     super(props);
     this.state = {
       item: {},
-      showDetails: false,
-      details: {},
     };
   }
 
@@ -51,17 +50,12 @@ class ToDo extends React.Component {
   };
 
   toggleDetails = id => {
-    this.setState(state => {
-      let item = state.todoList.find(item => item._id === id);
-      return {
-        details: item || {},
-        showDetails: !!item,
-      };
-    });
+    let item = this.props.todoList.find(item => item._id === id);
+    this.props.toggleDetails(item);
   }
 
   render() {
-
+    console.log(this.props)
     return (
       <>
         <header>
@@ -123,15 +117,15 @@ class ToDo extends React.Component {
           </div>
         </section>
 
-        <When condition={this.state.showDetails}>
+        <When condition={this.props.showDetails}>
           <Modal title="To Do Item" close={this.toggleDetails}>
             <div className="todo-details">
               <header>
-                <span>Assigned To: {this.state.details.assignee}</span>
-                <span>Due: {this.state.details.due}</span>
+                <span>Assigned To: {this.props.details.assignee}</span>
+                <span>Due: {this.props.details.due}</span>
               </header>
               <div className="item">
-                {this.state.details.text}
+                {this.props.details.text}
               </div>
             </div>
           </Modal>
@@ -144,6 +138,7 @@ class ToDo extends React.Component {
 function mapStateToProps(state) {
   return {
     todoList: state.todoList,
+    ...state.details,
   };
 }
 
@@ -152,6 +147,7 @@ function mapDispatchToProps(dispatch) {
     addItem: item => dispatch(addItem(item)),
     deleteItem: id => dispatch(deleteItem(id)),
     toggleComplete: id => dispatch(toggleComplete(id)),
+    toggleDetails: id => dispatch(toggleDetails(id)),
   };
 }
 
