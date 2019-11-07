@@ -2,6 +2,10 @@ import React from 'react';
 import uuid from 'uuid/v4';
 import { When } from '../if';
 import Modal from '../modal';
+import { connect } from 'react-redux';
+
+import { addItem, deleteItem, toggleComplete} from '../../store/todolist-reducer';
+import { toggleDetails } from '../../store/item-reducer';
 
 import './todo.scss';
 
@@ -9,10 +13,7 @@ class ToDo extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      todoList: [],
       item: {},
-      showDetails: false,
-      details: {},
     };
   }
 
@@ -28,67 +29,39 @@ class ToDo extends React.Component {
   };
 
   addItem = (e) => {
-
     e.preventDefault();
     e.target.reset();
 
     const defaults = { _id: uuid(), complete:false };
     const item = Object.assign({}, this.state.item, defaults);
-
+    
+    this.props.addItem(item);
     this.setState(state => ({
-      todoList: [...state.todoList, item],
-      item: {},
-    }));
-
+      item: {}
+    }))
   };
 
   deleteItem = id => {
-
-    this.setState(state => ({
-      todoList: state.todoList.filter(item => item._id !== id),
-    }));
-
-  };
-
-  saveItem = updatedItem => {
-
-    this.setState(state => ({
-      todoList: state.todoList.map(item =>
-        item._id === updatedItem._id ? updatedItem : item
-      ),
-    }));
-
+    this.props.deleteItem(id);
   };
 
   toggleComplete = id => {
-    this.setState(state => ({
-      todoList: state.todoList.map(item =>
-        item._id === id ? {
-          ...item,
-          complete: !item.complete,
-        } : item
-      ),
-    }));
+    this.props.toggleComplete(id);
   };
 
   toggleDetails = id => {
-    this.setState(state => {
-      let item = state.todoList.find(item => item._id === id);
-      return {
-        details: item || {},
-        showDetails: !!item,
-      };
-    });
+    let item = this.props.todoList.find(item => item._id === id);
+    this.props.toggleDetails(item);
   }
 
   render() {
-
+    console.log(this.props)
     return (
       <>
         <header>
           <h2>
             There are
-            {this.state.todoList.filter( item => !item.complete ).length}
+            {this.props.todoList.filter( item => !item.complete ).length}
             Items To Complete
           </h2>
         </header>
@@ -124,7 +97,7 @@ class ToDo extends React.Component {
 
           <div>
             <ul>
-              { this.state.todoList.map(item => (
+              { this.props.todoList.map(item => (
                 <li
                   className={`complete-${item.complete.toString()}`}
                   key={item._id}
@@ -144,15 +117,15 @@ class ToDo extends React.Component {
           </div>
         </section>
 
-        <When condition={this.state.showDetails}>
+        <When condition={this.props.showDetails}>
           <Modal title="To Do Item" close={this.toggleDetails}>
             <div className="todo-details">
               <header>
-                <span>Assigned To: {this.state.details.assignee}</span>
-                <span>Due: {this.state.details.due}</span>
+                <span>Assigned To: {this.props.details.assignee}</span>
+                <span>Due: {this.props.details.due}</span>
               </header>
               <div className="item">
-                {this.state.details.text}
+                {this.props.details.text}
               </div>
             </div>
           </Modal>
@@ -162,4 +135,23 @@ class ToDo extends React.Component {
   }
 }
 
-export default ToDo;
+function mapStateToProps(state) {
+  return {
+    todoList: state.todoList,
+    ...state.details,
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    addItem: item => dispatch(addItem(item)),
+    deleteItem: id => dispatch(deleteItem(id)),
+    toggleComplete: id => dispatch(toggleComplete(id)),
+    toggleDetails: id => dispatch(toggleDetails(id)),
+  };
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ToDo);
